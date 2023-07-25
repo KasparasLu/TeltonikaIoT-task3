@@ -1,0 +1,57 @@
+﻿@page "/choosemodels"
+@using System.Text;
+
+<h1>Choose models</h1>
+
+<InputFile OnChange="@LoadSource"/>
+
+<button class="btn btn-info" type="button" @onclick="SubmitSource">
+    <span></span> Submit
+</button>
+<br>
+
+<br>
+
+<InputFile OnChange="@LoadTarget"/>
+
+<button class="btn btn-info" type="button" @onclick="SubmitTarget">
+    <span></span> Submit
+</button>
+
+@code {
+
+    public IBrowserFile ChosenSource { get; set; }
+
+    public IBrowserFile ChosenTarget { get; set; }
+
+    private async Task LoadSource(InputFileChangeEventArgs e)
+    {
+        ChosenSource = e.File;
+    }
+
+    private async Task LoadTarget(InputFileChangeEventArgs e)
+    {
+        ChosenTarget = e.File;
+    }
+
+    private void SubmitSource()
+    {
+        //var File = new FileContent(ChosenSource, Encoding.UTF8, "multipart/form-data");
+        var Http = new HttpClient();
+        Http.PostAsync("http://localhost:5091/api/uploadSourceCfg", new MultipartFormDataContent
+        {
+            {new StreamContent(ChosenSource.OpenReadStream()), "file", ChosenSource.Name }
+        });
+    }
+
+    private void SubmitTarget()
+    {
+        //var File = new StringContent(ChosenTarget, Encoding.UTF8, "multipart/form-data");
+        var Http = new HttpClient();
+        Http.PostAsync("http://localhost:5091/api/uploadTargetCfg", new MultipartFormDataContent
+        {
+            {new StreamContent(ChosenTarget.OpenReadStream()), "file", ChosenTarget.Name }
+        });
+    }
+
+}

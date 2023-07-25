@@ -1,0 +1,147 @@
+﻿@page "/datacomparison"
+@inject HttpClient Http
+
+
+<h1>Data comparison</h1>
+
+<p>This component demonstrates fetched data through the api.</p>
+
+@if (datacomparison == null)
+{
+    <p><em>Please upload source and target files...</em></p>
+}
+else
+{
+    <style>
+        .custom-table {
+            border: 5px solid #000000;
+            border-radius: 10px;
+        }
+
+        .flex-container {
+            display: flex;
+        }
+
+        .flex-item {
+            flex: 1;
+            margin: 5px;
+        }
+    </style>
+    <div class="container">
+        <div class="flex-container">
+            <div class="flex-item">
+                <table class="table">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Source @datacomparison.sourceName</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var description in datacomparison.sourceDescription)
+                            {
+                                <tr style="background-color: gray">
+                                    <td>@description.Id</td>
+                                    <td>@description.Value</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </table>
+            </div>
+            <div class="flex-item">
+                <table class="table">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Target @datacomparison.targetName</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var description in datacomparison.targetDescription)
+                            {
+                                <tr style="background-color: gray">
+                                    <td>@description.Id</td>
+                                    <td>@description.Value</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </table>
+            </div>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Source id</th>
+                <th>Source value</th>
+                <th>Target id</th>
+                <th>Target value</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var comparison in datacomparison.comparisons)
+            {
+                <tr style="background-color: @(setColour(comparison))">
+                    <td>@comparison.sourceId</td>
+                    <td>@comparison.sourceValue</td>
+                    <td>@comparison.targetId</td>
+                    <td>@comparison.targetValue</td>
+                    <td>@comparison.result</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private DataCompare datacomparison;
+
+    protected override async Task OnInitializedAsync()
+    {
+        datacomparison = await Http.GetFromJsonAsync<DataCompare>("http://localhost:5091/ComparisonResults");
+    }
+
+    private string setColour(Comparison row)
+    {
+        if (row.result == "Unchanged") return "white";
+        else if (row.result == "Added") return "green";
+        else if (row.result == "Removed") return "red";
+        else if (row.result == "Modified") return "yellow";
+        else return "white";
+    }
+
+    public class DataCompare
+    {
+        public string sourceName { get; set; }
+
+        public List<DataPair> sourceDescription { get; set; }
+
+        public string targetName { get; set; }
+
+        public List<DataPair> targetDescription { get; set; }
+
+        public List<Comparison> comparisons { get; set; }
+    }
+
+    public class DataPair
+    {
+        public string Id { get; set; }
+
+        public string Value { get; set; }
+    }
+
+    public class Comparison
+    {
+        public string sourceId { get; set; }
+        public string targetId { get; set; }
+        public string sourceValue { get; set; }
+        public string targetValue { get; set; }
+        public string result { get; set; }
+    }
+}

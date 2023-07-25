@@ -1,0 +1,45 @@
+﻿@page "/addfilters"
+@using System.Text;
+
+<h1>Add Filters</h1>
+
+<div class="form-group">
+    <textarea class="form-control col-md-6" placeholder="Input the desired ID filter" @bind-value="IdFilterBody" @bind-value:event="oninput"></textarea>
+    <small class="form-text text-muted">For example: 123 or 10</small>
+</div>
+
+<button class="btn btn-primary" type="button" @onclick="SubmitIdFilter">
+    <span></span> Submit
+</button>
+<br>
+
+<br>
+
+<div class="form-group">
+    <textarea class="form-control col-md-6" placeholder="Input the desired Result filter" @bind-value="ResultFilterBody" @bind-value:event="oninput"></textarea>
+    <small class="form-text text-muted">For example: Removed,Added or Unchanged</small>
+</div>
+
+<button class="btn btn-primary" type="button" @onclick="SubmitResultFilter">
+    <span></span> Submit
+</button>
+
+@code {
+    public string IdFilterBody { get; set; }
+
+    public string ResultFilterBody { get; set; }
+
+    private void SubmitIdFilter()
+    {
+        var Filter = new StringContent("\"" + IdFilterBody + "\"", Encoding.UTF8, "application/json");
+        var Http = new HttpClient();
+        Http.PostAsync("http://localhost:5091/api/applyIdFilter", Filter);
+    }
+
+    private void SubmitResultFilter()
+    {
+        var Filter = new StringContent("\"" + ResultFilterBody + "\"", Encoding.UTF8, "application/json");
+        var Http = new HttpClient();
+        Http.PostAsync("http://localhost:5091/api/applyResultFilter", Filter);
+    }
+}
