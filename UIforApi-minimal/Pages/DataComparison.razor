@@ -1,13 +1,32 @@
 ﻿@page "/datacomparison"
+@using System.Text.Json;
 @inject HttpClient Http
 
 
 <h1>Data comparison</h1>
 
+
 <p>This component demonstrates fetched data through the api.</p>
 
 @if (datacomparison == null)
 {
+    <h2>Choose models</h2>
+
+    <InputFile OnChange="@LoadSource" />
+
+    <button class="btn btn-info" type="button" @onclick="SubmitSource">
+        <span></span> Submit
+    </button>
+    <br>
+
+    <br>
+
+    <InputFile OnChange="@LoadTarget" />
+
+    <button class="btn btn-info" type="button" @onclick="SubmitTarget">
+        <span></span> Submit
+    </button>
+
     <p><em>Please upload source and target files...</em></p>
 }
 else
@@ -100,11 +119,50 @@ else
 
 @code {
 
+    public IBrowserFile ChosenSource { get; set; }
+
+    public IBrowserFile ChosenTarget { get; set; }
+
+    private async Task LoadSource(InputFileChangeEventArgs e)
+    {
+        ChosenSource = e.File;
+    }
+
+    private async Task LoadTarget(InputFileChangeEventArgs e)
+    {
+        ChosenTarget = e.File;
+    }
+
+    private void SubmitSource()
+    {
+        OnInitializedAsync();
+    }
+
+    private void SubmitTarget()
+    {
+        OnInitializedAsync();
+    }
+
     private DataCompare datacomparison;
 
     protected override async Task OnInitializedAsync()
     {
-        datacomparison = await Http.GetFromJsonAsync<DataCompare>("http://localhost:5091/ComparisonResults");
+        var compareData = new MultipartFormDataContent();
+        compareData.Add(new StreamContent(ChosenSource.OpenReadStream()), "SourceFile", ChosenSource.Name);
+        compareData.Add(new StreamContent(ChosenTarget.OpenReadStream()), "TargetFile", ChosenTarget.Name);
+        var payloadJson = JsonSerializer.Serialize(datacomparison);
+        var Http = new HttpClient();
+        var response = await Http.PostAsync("http://localhost:5091/api/getComparison", compareData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            datacomparison = JsonSerializer.Deserialize<DataCompare>(jsonResponse);
+        }
+        else
+        {
+            Console.WriteLine($"HTTP POST request failed with status code: {response.StatusCode}");
+        }
     }
 
     private string setColour(Comparison row)
